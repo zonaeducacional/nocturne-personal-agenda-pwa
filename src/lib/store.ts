@@ -9,7 +9,7 @@ interface AppState {
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   init: () => Promise<void>;
-  addEvent: (event: Omit<Event, 'id'>) => Promise<void>;
+  addEvent: (eventData: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
@@ -25,24 +25,30 @@ export const useAppStore = create<AppState>()(
         if (get().initialized && get().user) return;
         set({ loading: true });
         try {
-          const storedUser = localStorage.getItem('nocturne_user_id');
-          if (storedUser) {
+          const userId = localStorage.getItem('nocturne_user_id');
+          if (userId) {
             try {
-              const data = await api<User>(`/api/users/${storedUser}`);
+              const data = await api<User>(`/api/users/${userId}`);
               set({ user: data, initialized: true });
             } catch (e) {
-              console.warn('Stale user ID, creating new...');
-              const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'Usuário' }) });
+              console.error('Failed to fetch existing user:', e);
+              const newUser = await api<User>('/api/users', { 
+                method: 'POST', 
+                body: JSON.stringify({ name: 'Usu��rio' }) 
+              });
               localStorage.setItem('nocturne_user_id', newUser.id);
               set({ user: newUser, initialized: true });
             }
           } else {
-            const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'Usuário' }) });
+            const newUser = await api<User>('/api/users', { 
+              method: 'POST', 
+              body: JSON.stringify({ name: 'Usuário' }) 
+            });
             localStorage.setItem('nocturne_user_id', newUser.id);
             set({ user: newUser, initialized: true });
           }
         } catch (e) {
-          console.error('Failed to init app state', e);
+          console.error('Critical initialization error:', e);
         } finally {
           set({ loading: false });
         }
@@ -70,7 +76,7 @@ export const useAppStore = create<AppState>()(
           });
           set({ user: updatedUser });
         } catch (e) {
-          console.error(e);
+          console.error('Delete event error:', e);
         }
       },
       updateProfile: async (updates) => {
@@ -83,14 +89,17 @@ export const useAppStore = create<AppState>()(
           });
           set({ user: updatedUser });
         } catch (e) {
-          console.error('Failed to update profile', e);
+          console.error('Update profile error:', e);
           throw e;
         }
       },
     }),
     {
       name: 'nocturne-storage',
-      partialize: (state) => ({ user: state.user, initialized: state.initialized }),
+      partialize: (state) => ({ 
+        user: state.user, 
+        initialized: state.initialized 
+      }),
     }
   )
 );

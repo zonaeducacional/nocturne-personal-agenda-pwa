@@ -10,19 +10,20 @@ import { AnimatePresence, motion } from 'framer-motion';
 export function HomePage() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // Rule: useStore(s => s.primitive) ONLY.
   const init = useAppStore(s => s.init);
   const loading = useAppStore(s => s.loading);
   useEffect(() => {
-    init();
+    // Ensuring init is called safely
+    const triggerInit = async () => {
+      try {
+        await init();
+      } catch (err) {
+        console.error("Initialization failed during mount:", err);
+      }
+    };
+    triggerInit();
   }, [init]);
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'home': return <DashboardView />;
-      case 'calendar': return <CalendarView />;
-      case 'profile': return <ProfileView />;
-      default: return null;
-    }
-  };
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-50 flex flex-col max-w-lg mx-auto relative overflow-hidden">
       <main className="flex-1 pb-32">
@@ -35,25 +36,31 @@ export function HomePage() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            {renderContent()}
+            {activeTab === 'home' && <DashboardView />}
+            {activeTab === 'calendar' && <CalendarView />}
+            {activeTab === 'profile' && <ProfileView />}
           </motion.div>
         </AnimatePresence>
       </main>
       <BottomNav
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => setActiveTab(tab)}
         onAddClick={() => setIsSheetOpen(true)}
       />
       <AddEventSheet
         open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
+        onOpenChange={(val) => setIsSheetOpen(val)}
       />
-      <Toaster 
-        theme="dark" 
-        position="top-center" 
-        richColors 
+      <Toaster
+        theme="dark"
+        position="top-center"
+        richColors
         toastOptions={{
-          style: { background: '#18181b', border: '1px solid rgba(255,255,255,0.1)', color: '#fafafa' }
+          style: { 
+            background: '#18181b', 
+            border: '1px solid rgba(255,255,255,0.1)', 
+            color: '#fafafa' 
+          }
         }}
       />
       {loading && (
