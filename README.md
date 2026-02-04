@@ -11,7 +11,7 @@ A production-ready fullstack template for Cloudflare Workers featuring Durable O
 - **Developer Experience**: Hot reload, error boundaries, theme toggle, mobile-responsive sidebar.
 - **Production-Ready**: CORS, logging, error handling, client error reporting.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/zonaeducacional/nocturne-personal-agenda-pwa)
 
 ## 🛠️ Tech Stack
 
@@ -98,7 +98,7 @@ Or manually:
 2. Deploy: `wrangler deploy`
 3. Custom Domain: Edit `wrangler.jsonc`
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/zonaeducacional/nocturne-personal-agenda-pwa)
 
 **Assets**: Static frontend served from Workers. API routes (`/api/*`) handled by Worker first.
 
