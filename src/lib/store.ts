@@ -31,13 +31,15 @@ export const useAppStore = create<AppState>()(
               const data = await api<User>(`/api/users/${userId}`);
               set({ user: data, initialized: true });
             } catch (e) {
-              console.error('Failed to fetch existing user:', e);
-              const newUser = await api<User>('/api/users', { 
-                method: 'POST', 
-                body: JSON.stringify({ name: 'Usu��rio' }) 
-              });
-              localStorage.setItem('nocturne_user_id', newUser.id);
-              set({ user: newUser, initialized: true });
+              const guestUser: User = {
+                id: 'guest-local',
+                name: 'Convidado',
+                events: [],
+                preferences: { theme: 'dark', notificationsEnabled: false }
+              };
+              localStorage.removeItem('nocturne_user_id');
+              set({ user: guestUser, initialized: true });
+              console.warn('Failed to fetch existing user - using guest mode:', e);
             }
           } else {
             const newUser = await api<User>('/api/users', { 
@@ -48,14 +50,25 @@ export const useAppStore = create<AppState>()(
             set({ user: newUser, initialized: true });
           }
         } catch (e) {
-          console.error('Critical initialization error:', e);
+          const guestUser: User = { 
+            id: 'guest-local', 
+            name: 'Convidado', 
+            events: [], 
+            preferences: { theme: 'dark', notificationsEnabled: false } 
+          };
+          localStorage.removeItem('nocturne_user_id');
+          set({ user: guestUser, initialized: true });
+          console.warn('Failed to initialize with server - using guest mode:', e);
         } finally {
           set({ loading: false });
         }
       },
       addEvent: async (eventData) => {
         const user = get().user;
-        if (!user) return;
+        if (!user || user.id === 'guest-local') { 
+          console.warn('addEvent skipped in guest mode'); 
+          return; 
+        }
         set({ loading: true });
         try {
           const updatedUser = await api<User>(`/api/users/${user.id}/events`, {
@@ -69,7 +82,10 @@ export const useAppStore = create<AppState>()(
       },
       deleteEvent: async (eventId) => {
         const user = get().user;
-        if (!user) return;
+        if (!user || user.id === 'guest-local') { 
+          console.warn('deleteEvent skipped in guest mode'); 
+          return; 
+        }
         try {
           const updatedUser = await api<User>(`/api/users/${user.id}/events/${eventId}`, {
             method: 'DELETE',
@@ -81,7 +97,10 @@ export const useAppStore = create<AppState>()(
       },
       updateProfile: async (updates) => {
         const user = get().user;
-        if (!user) return;
+        if (!user || user.id === 'guest-local') { 
+          console.warn('updateProfile skipped in guest mode'); 
+          return; 
+        }
         try {
           const updatedUser = await api<User>(`/api/users/${user.id}`, {
             method: 'PATCH',
