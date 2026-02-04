@@ -39,16 +39,23 @@ export function HomePage() {
           </motion.div>
         </AnimatePresence>
       </main>
-      <BottomNav 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
-        onAddClick={() => setIsSheetOpen(true)} 
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onAddClick={() => setIsSheetOpen(true)}
       />
-      <AddEventSheet 
-        open={isSheetOpen} 
-        onOpenChange={setIsSheetOpen} 
+      <AddEventSheet
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
       />
-      <Toaster theme="dark" position="top-center" richColors />
+      <Toaster 
+        theme="dark" 
+        position="top-center" 
+        richColors 
+        toastOptions={{
+          style: { background: '#18181b', border: '1px solid rgba(255,255,255,0.1)', color: '#fafafa' }
+        }}
+      />
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[1px] pointer-events-none">
           <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />

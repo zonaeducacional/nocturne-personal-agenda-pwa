@@ -11,6 +11,7 @@ interface AppState {
   init: () => Promise<void>;
   addEvent: (event: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 export const useAppStore = create<AppState>()(
   persist(
@@ -24,7 +25,6 @@ export const useAppStore = create<AppState>()(
         if (get().initialized && get().user) return;
         set({ loading: true });
         try {
-          // Check for existing ID in local storage or create new
           const storedUser = localStorage.getItem('nocturne_user_id');
           if (storedUser) {
             try {
@@ -32,12 +32,12 @@ export const useAppStore = create<AppState>()(
               set({ user: data, initialized: true });
             } catch (e) {
               console.warn('Stale user ID, creating new...');
-              const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'User' }) });
+              const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'Usuário' }) });
               localStorage.setItem('nocturne_user_id', newUser.id);
               set({ user: newUser, initialized: true });
             }
           } else {
-            const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'User' }) });
+            const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'Usuário' }) });
             localStorage.setItem('nocturne_user_id', newUser.id);
             set({ user: newUser, initialized: true });
           }
@@ -71,6 +71,20 @@ export const useAppStore = create<AppState>()(
           set({ user: updatedUser });
         } catch (e) {
           console.error(e);
+        }
+      },
+      updateProfile: async (updates) => {
+        const user = get().user;
+        if (!user) return;
+        try {
+          const updatedUser = await api<User>(`/api/users/${user.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(updates),
+          });
+          set({ user: updatedUser });
+        } catch (e) {
+          console.error('Failed to update profile', e);
+          throw e;
         }
       },
     }),

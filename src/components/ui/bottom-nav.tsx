@@ -10,9 +10,9 @@ interface BottomNavProps {
 }
 export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps) {
   const tabs = [
-    { id: 'home' as TabType, icon: Home, label: 'Today' },
-    { id: 'calendar' as TabType, icon: Calendar, label: 'Calendar' },
-    { id: 'profile' as TabType, icon: User, label: 'Profile' },
+    { id: 'home' as TabType, icon: Home, label: 'Hoje' },
+    { id: 'calendar' as TabType, icon: Calendar, label: 'Calendário' },
+    { id: 'profile' as TabType, icon: User, label: 'Perfil' },
   ];
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/80 backdrop-blur-lg border-t border-white/10 px-6 pb-8 pt-2 safe-area-bottom">
@@ -34,11 +34,10 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
             </button>
           );
         })}
-        {/* Floating Add Button in Nav Context */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-10">
-          <Button 
+          <Button
             onClick={onAddClick}
-            size="icon" 
+            size="icon"
             className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 text-white"
           >
             <Plus className="w-8 h-8" />
