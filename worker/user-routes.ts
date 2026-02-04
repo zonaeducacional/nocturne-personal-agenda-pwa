@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from './core-utils';
 import { UserEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import type { Event } from "@shared/types";
+import type { Event } from "../shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // USERS
   app.get('/api/users/:id', async (c) => {

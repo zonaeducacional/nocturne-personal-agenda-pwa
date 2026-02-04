@@ -1,15 +1,17 @@
 import { IndexedEntity } from "./core-utils";
-import type { User, Event, Chat, ChatMessage } from "@shared/types";
-import { MOCK_CHATS, MOCK_CHAT_MESSAGES } from "@shared/mock-data";
+import type { User, Event, Chat, ChatMessage } from "../shared/types";
+import { MOCK_USERS } from "../shared/mock-data";
+import { MOCK_CHATS, MOCK_CHAT_MESSAGES } from "../shared/mock-data";
 export class UserEntity extends IndexedEntity<User> {
   static readonly entityName = "user";
   static readonly indexName = "users";
-  static readonly initialState: User = { 
-    id: "", 
-    name: "Anonymous", 
+  static readonly initialState: User = {
+    id: "",
+    name: "Anonymous",
     events: [],
     preferences: { theme: 'dark', notificationsEnabled: true }
   };
+  static seedData = MOCK_USERS;
   async addEvent(event: Event): Promise<User> {
     return this.mutate(s => ({
       ...s,
@@ -19,13 +21,13 @@ export class UserEntity extends IndexedEntity<User> {
   async updateEvent(eventId: string, updates: Partial<Event>): Promise<User> {
     return this.mutate(s => ({
       ...s,
-      events: s.events.map(e => e.id === eventId ? { ...e, ...updates } : e)
+      events: (s.events || []).map(e => e.id === eventId ? { ...e, ...updates } : e)
     }));
   }
   async deleteEvent(eventId: string): Promise<User> {
     return this.mutate(s => ({
       ...s,
-      events: s.events.filter(e => e.id !== eventId)
+      events: (s.events || []).filter(e => e.id !== eventId)
     }));
   }
 }
@@ -40,12 +42,13 @@ export class ChatBoardEntity extends IndexedEntity<ChatBoardState> {
   static readonly initialState: ChatBoardState = { id: "", title: "", messages: [] };
   static seedData = SEED_CHAT_BOARDS;
   async listMessages(): Promise<ChatMessage[]> {
-    const { messages } = await this.getState();
+    const { messages = [] } = await this.getState();
     return messages;
   }
   async sendMessage(userId: string, text: string): Promise<ChatMessage> {
-    const msg: ChatMessage = { id: crypto.randomUUID(), chatId: this.id, userId, text, ts: Date.now() };
-    await this.mutate(s => ({ ...s, messages: [...s.messages, msg] }));
+    const state = await this.getState();
+    const msg: ChatMessage = { id: crypto.randomUUID(), chatId: state.id || '', userId, text, ts: Date.now() };
+    await this.mutate(s => ({ ...s, messages: [...(s.messages || []), msg] }));
     return msg;
   }
 }
