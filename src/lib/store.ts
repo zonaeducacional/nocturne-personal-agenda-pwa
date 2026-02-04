@@ -9,9 +9,8 @@ interface AppState {
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   init: () => Promise<void>;
-  addEvent: (eventData: Omit<Event, 'id'>) => Promise<void>;
+  addEvent: (event: Omit<Event, 'id'>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 export const useAppStore = create<AppState>()(
   persist(
@@ -25,50 +24,25 @@ export const useAppStore = create<AppState>()(
         if (get().initialized && get().user) return;
         set({ loading: true });
         try {
-          const userId = localStorage.getItem('nocturne_user_id');
-          if (userId) {
-            try {
-              const data = await api<User>(`/api/users/${userId}`);
-              set({ user: data, initialized: true });
-            } catch (e) {
-              const guestUser: User = {
-                id: 'guest-local',
-                name: 'Convidado',
-                events: [],
-                preferences: { theme: 'dark', notificationsEnabled: false }
-              };
-              localStorage.removeItem('nocturne_user_id');
-              set({ user: guestUser, initialized: true });
-              console.warn('Failed to fetch existing user - using guest mode:', e);
-            }
+          // Check for existing ID in local storage or create new
+          const storedUser = localStorage.getItem('nocturne_user_id');
+          if (storedUser) {
+            const data = await api<User>(`/api/users/${storedUser}`);
+            set({ user: data, initialized: true });
           } else {
-            const newUser = await api<User>('/api/users', { 
-              method: 'POST', 
-              body: JSON.stringify({ name: 'Usuário' }) 
-            });
+            const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'User' }) });
             localStorage.setItem('nocturne_user_id', newUser.id);
             set({ user: newUser, initialized: true });
           }
         } catch (e) {
-          const guestUser: User = { 
-            id: 'guest-local', 
-            name: 'Convidado', 
-            events: [], 
-            preferences: { theme: 'dark', notificationsEnabled: false } 
-          };
-          localStorage.removeItem('nocturne_user_id');
-          set({ user: guestUser, initialized: true });
-          console.warn('Failed to initialize with server - using guest mode:', e);
+          console.error('Failed to init app state', e);
         } finally {
           set({ loading: false });
         }
       },
       addEvent: async (eventData) => {
         const user = get().user;
-        if (!user || user.id === 'guest-local') { 
-          console.warn('addEvent skipped in guest mode'); 
-          return; 
-        }
+        if (!user) return;
         set({ loading: true });
         try {
           const updatedUser = await api<User>(`/api/users/${user.id}/events`, {
@@ -82,43 +56,20 @@ export const useAppStore = create<AppState>()(
       },
       deleteEvent: async (eventId) => {
         const user = get().user;
-        if (!user || user.id === 'guest-local') { 
-          console.warn('deleteEvent skipped in guest mode'); 
-          return; 
-        }
+        if (!user) return;
         try {
           const updatedUser = await api<User>(`/api/users/${user.id}/events/${eventId}`, {
             method: 'DELETE',
           });
           set({ user: updatedUser });
         } catch (e) {
-          console.error('Delete event error:', e);
-        }
-      },
-      updateProfile: async (updates) => {
-        const user = get().user;
-        if (!user || user.id === 'guest-local') { 
-          console.warn('updateProfile skipped in guest mode'); 
-          return; 
-        }
-        try {
-          const updatedUser = await api<User>(`/api/users/${user.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify(updates),
-          });
-          set({ user: updatedUser });
-        } catch (e) {
-          console.error('Update profile error:', e);
-          throw e;
+          console.error(e);
         }
       },
     }),
     {
       name: 'nocturne-storage',
-      partialize: (state) => ({ 
-        user: state.user, 
-        initialized: state.initialized 
-      }),
+      partialize: (state) => ({ user: state.user, initialized: state.initialized }),
     }
   )
 );
