@@ -27,8 +27,15 @@ export const useAppStore = create<AppState>()(
           // Check for existing ID in local storage or create new
           const storedUser = localStorage.getItem('nocturne_user_id');
           if (storedUser) {
-            const data = await api<User>(`/api/users/${storedUser}`);
-            set({ user: data, initialized: true });
+            try {
+              const data = await api<User>(`/api/users/${storedUser}`);
+              set({ user: data, initialized: true });
+            } catch (e) {
+              console.warn('Stale user ID, creating new...');
+              const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'User' }) });
+              localStorage.setItem('nocturne_user_id', newUser.id);
+              set({ user: newUser, initialized: true });
+            }
           } else {
             const newUser = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: 'User' }) });
             localStorage.setItem('nocturne_user_id', newUser.id);
